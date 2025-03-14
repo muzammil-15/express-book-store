@@ -1,30 +1,32 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-let books = require("./booksdb.js");
-const regd_users = express.Router();
+const User = require('./models/User'); // Adjust based on your model
+const app = express();
+app.use(express.json());
 
-let users = [];
-
-const isValid = (username)=>{ //returns boolean
-//write code to check is the username is valid
-}
-
-const authenticatedUser = (username,password)=>{ //returns boolean
-//write code to check if username and password match the one we have in records.
-}
-
-//only registered users can login
-regd_users.post("/login", (req,res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+// Register
+app.post('/register', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = new User({ username, password }); 
+    await user.save();
+    res.status(201).json({ message: 'User registered' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
-// Add a book review
-regd_users.put("/auth/review/:isbn", (req, res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+// Login
+app.post('/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+    if (!user || user.password !== password) { // Add proper password check
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    const token = jwt.sign({ id: user._id }, 'your-secret-key', { expiresIn: '1h' });
+    res.json({ token });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
-
-module.exports.authenticated = regd_users;
-module.exports.isValid = isValid;
-module.exports.users = users;
